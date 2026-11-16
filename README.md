@@ -11,6 +11,7 @@
   [![Framework](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-ea580c?style=for-the-badge&logo=target&logoColor=white)](https://attack.mitre.org/)
   [![Containment](https://img.shields.io/badge/Containment-Active%20Response%20(Sub--Second)-16a34a?style=for-the-badge&logo=shield&logoColor=white)](#-automated-threat-response-pipeline)
   [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+  [![Lab validation](https://github.com/0xsabry/wazuh-shuffle-soar-soc-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/0xsabry/wazuh-shuffle-soar-soc-lab/actions/workflows/ci.yml)
 
   <br>
 
@@ -52,6 +53,7 @@
   - [6. Shuffle SOAR & VirusTotal Integration](#6-shuffle-soar--virustotal-integration)
   - [7. Active Response & Host Containment](#7-active-response--host-containment)
 - [Quick Start & Reproduction](#-quick-start--reproduction)
+- [Local Validation](#-local-validation)
 - [Repository Structure](#-repository-structure)
 - [Author & Credits](#-author--credits)
 
@@ -408,13 +410,17 @@ git clone https://github.com/0xsabry/wazuh-shuffle-soar-soc-lab.git
 cd wazuh-shuffle-soar-soc-lab
 ```
 
-### 2. Review Sanitized Configurations
+### 2. Run the offline validation
+See [Local Validation](#local-validation) for the standard-library checks. They
+do not start or contact any lab services.
+
+### 3. Review Sanitized Configurations
 - **Wazuh Manager Config**: [`configs/ossec.conf`](configs/ossec.conf)
 - **Custom Detection Rules**: [`configs/rules/local_rules.xml`](configs/rules/local_rules.xml)
 - **Shuffle SOAR Playbook**: [`configs/shuffle/soc_automated_response_workflow.json`](configs/shuffle/soc_automated_response_workflow.json)
 - **Containment Scripts**: [`configs/scripts/`](configs/scripts/)
 
-### 3. Deploy the Lab
+### 4. Deploy the Lab
 Follow our comprehensive step-by-step guides in the `docs/` directory:
 - [📖 Full Architecture Guide](docs/ARCHITECTURE.md)
 - [📖 Attack Execution Playbooks](docs/ATTACK_SCENARIOS.md)
@@ -424,13 +430,28 @@ Follow our comprehensive step-by-step guides in the `docs/` directory:
 
 ---
 
+## 🧪 Local Validation
+
+Run the offline structural checks before changing configuration assets:
+
+```bash
+python scripts/validate_lab_assets.py
+python -m unittest discover -s tests -v
+```
+
+These checks validate XML/SVG syntax, unique numeric Wazuh rule IDs, and
+Shuffle workflow branch references. They do not deploy the lab or contact any
+of its services.
+
+---
+
 ## 📂 Repository Structure
 
 ```text
 .
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                         # Automated CI pipeline for link & schema checks
+│       └── ci.yml                         # Offline asset validation and tests
 ├── assets/
 │   ├── animations/
 │   │   ├── banner-animated.svg            # Animated cyber SOC header banner
