@@ -8,6 +8,26 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CUSTOM_RULE_ID_MIN = 100000
+CUSTOM_RULE_ID_MAX = 120000
+AUTH_OPTIONS_4_14 = {
+    "disabled",
+    "remote_enrollment",
+    "port",
+    "ipv6",
+    "use_source_ip",
+    "force",
+    "purge",
+    "use_password",
+    "ssl_agent_ca",
+    "ssl_verify_host",
+    "ssl_manager_cert",
+    "ssl_manager_key",
+    "ssl_auto_negotiate",
+    "ciphers",
+    "key_request",
+    "agents",
+}
 SVG_FILES = (
     "banner-animated.svg",
     "architecture-flow.svg",
@@ -37,6 +57,17 @@ def validate_local_rules(path: Path) -> int:
     if any(not rule_id or not rule_id.isdecimal() for rule_id in rule_ids):
         raise ValueError(f"every rule in {path} must have a numeric id")
 
+    outside_custom_range = sorted(
+        rule_id
+        for rule_id in rule_ids
+        if not CUSTOM_RULE_ID_MIN <= int(rule_id) <= CUSTOM_RULE_ID_MAX
+    )
+    if outside_custom_range:
+        raise ValueError(
+            f"custom rule ids must be between {CUSTOM_RULE_ID_MIN} and "
+            f"{CUSTOM_RULE_ID_MAX}: {', '.join(outside_custom_range)}"
+        )
+
     seen = set()
     duplicates = set()
     for rule_id in rule_ids:
@@ -48,6 +79,44 @@ def validate_local_rules(path: Path) -> int:
             f"duplicate rule ids in {path}: {', '.join(sorted(duplicates))}"
         )
     return len(rule_ids)
+
+
+def validate_ossec_config(path: Path) -> tuple[set[str], int]:
+    root = parse_xml(path, "ossec_config")
+    auth = root.find("auth")
+    if auth is not None:
+        unknown_options = sorted(
+            child.tag for child in auth if child.tag not in AUTH_OPTIONS_4_14
+        )
+        if unknown_options:
+            raise ValueError(
+                f"unsupported Wazuh 4.14 auth option(s): {', '.join(unknown_options)}"
+            )
+
+    integrations = root.findall("integration")
+    for integration in integrations:
+        name = (integration.findtext("name") or "").strip()
+        if not name:
+            raise ValueError("every Wazuh integration needs a name")
+        if name.startswith("custom-"):
+            script = path.parent / "integrations" / name
+            if not script.is_file():
+                raise ValueError(
+                    f"custom integration {name!r} has no matching script at {script}"
+                )
+            first_line = script.read_text(encoding="utf-8").splitlines()[:1]
+            if not first_line or not first_line[0].startswith("#!"):
+                raise ValueError(f"custom integration {name!r} needs an interpreter line")
+
+    referenced_ids = set()
+    for tag in ("rule_id", "rules_id"):
+        for element in root.iter(tag):
+            referenced_ids.update(
+                value.strip()
+                for value in (element.text or "").split(",")
+                if value.strip()
+            )
+    return referenced_ids, len(integrations)
 
 
 def validate_shuffle_workflow(path: Path) -> tuple[int, int]:
@@ -113,8 +182,18 @@ def validate_shuffle_workflow(path: Path) -> tuple[int, int]:
 
 
 def validate_lab_assets(root: Path = ROOT) -> dict[str, int]:
-    parse_xml(root / "configs" / "ossec.conf", "ossec_config")
+    config_rule_refs, integration_count = validate_ossec_config(
+        root / "configs" / "ossec.conf"
+    )
     rule_count = validate_local_rules(root / "configs" / "rules" / "local_rules.xml")
+    local_rules_root = parse_xml(root / "configs" / "rules" / "local_rules.xml", "group")
+    local_rule_ids = {rule.get("id") for rule in local_rules_root.iter("rule")}
+    unresolved_refs = sorted(config_rule_refs - local_rule_ids)
+    if unresolved_refs:
+        raise ValueError(
+            "Wazuh config references local rule ids that are not defined: "
+            + ", ".join(unresolved_refs)
+        )
     workflow_nodes, workflow_branches = validate_shuffle_workflow(
         root / "configs" / "shuffle" / "soc_automated_response_workflow.json"
     )
@@ -125,6 +204,7 @@ def validate_lab_assets(root: Path = ROOT) -> dict[str, int]:
 
     return {
         "local_rules": rule_count,
+        "integrations": integration_count,
         "shuffle_nodes": workflow_nodes,
         "shuffle_branches": workflow_branches,
         "svgs": len(SVG_FILES),
@@ -141,6 +221,7 @@ def main() -> int:
     print(
         "Lab assets valid: "
         f"{summary['local_rules']} Wazuh rules, "
+        f"{summary['integrations']} Wazuh integration(s), "
         f"{summary['shuffle_nodes']} Shuffle nodes with "
         f"{summary['shuffle_branches']} valid branches, "
         f"{summary['svgs']} SVG files."

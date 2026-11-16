@@ -1,6 +1,6 @@
 # Red-Team Attack Scenarios & Execution Playbooks
 
-Detailed documentation of simulated offensive tactics, techniques, and procedures (TTPs) executed against monitored endpoints.
+Documentation of planned defensive validation scenarios. The offline checks do not replay these events in `wazuh-logtest` or verify live containment; do not treat detection and response outcomes as reproduced from a clean checkout.
 
 ---
 
@@ -25,10 +25,10 @@ Simulate external credential-stuffing and automated password guessing against an
    ```
 3. **Detection Outcome**:
    - Wazuh Rule `5710` (SSH authentication failure) matched repeatedly.
-   - Frequency threshold reached: Wazuh Rule `5763` (Maximum authentication attempts exceeded) triggered at severity Level 10.
-4. **Automated Containment**:
-   - Rule `5763` escalated to Rule `651` (`firewall-drop`).
-   - The attacking IP address was blocked immediately via `iptables -I INPUT -s <src_ip> -j DROP`.
+   - Frequency threshold reached: Wazuh Rule `100003` (Maximum authentication attempts exceeded) triggered at severity Level 10.
+4. **Intended Containment Configuration (Runtime Unverified)**:
+   - `ossec.conf` requests `firewall-drop` when rule `100003` matches.
+   - Rule `100007` records matching active-response log events; it is not the response command. Verify behavior on an isolated agent before relying on it.
 
 ---
 
@@ -53,10 +53,9 @@ Simulate an initial-access payload execution where an adversary bypasses PowerSh
    ```
 3. **Detection Outcome**:
    - Sysmon Event ID 1 (Process Creation) and Windows Event ID 4104 (Script Block Logging) captured the raw command line and decoded buffer.
-   - Wazuh Rule `91837` (Suspicious PowerShell string execution) and Rule `67027` (Hidden process creation) fired at severity Level 12.
-4. **Automated Containment**:
-   - SOAR routed alert to Wazuh Active Response.
-   - Wazuh Rule `657` executed `netsh.cmd`, isolating the endpoint's network interfaces from further external lateral movement.
+   - Wazuh Rule `100004` (Suspicious PowerShell string execution) and Rule `100005` (Hidden process creation) fired at severity Level 12.
+4. **Intended Containment Configuration (Runtime Unverified)**:
+   - The repository contains a Windows response configuration, but its script interface and current Windows agent compatibility require live validation. No containment result is claimed here.
 
 ---
 
@@ -78,7 +77,6 @@ Simulate lateral movement and persistence where an attacker leverages administra
    ```
 2. **Detection Outcome**:
    - Windows System Event ID 7045 ("A service was installed in the system") logged.
-   - Wazuh Rule `92650` ("New Windows Service Created") triggered at critical Level 12.
-3. **Automated Containment**:
-   - Shuffle SOAR parsed the service name and target host.
-   - Active Response Rule `657` executed `netsh advfirewall` rules to cut external C2 beaconing.
+   - Wazuh Rule `100006` ("New Windows Service Created") triggered at critical Level 12.
+3. **Intended Containment Configuration (Runtime Unverified)**:
+   - The repository contains a Windows response design. Confirm event fields, supported script interface, and recovery path in an isolated lab before testing it.

@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Forward one Wazuh JSON alert to a configured Shuffle webhook."""
+
+import json
+import sys
+from pathlib import Path
+from urllib.error import URLError
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
+
+
+def build_request(alert: dict, hook_url: str) -> Request:
+    """Build a JSON POST without logging or exposing the webhook URL."""
+    if not isinstance(alert, dict):
+        raise ValueError("Wazuh alert must be a JSON object")
+    parsed_url = urlparse(hook_url)
+    if parsed_url.scheme not in {"https", "http"} or not parsed_url.netloc:
+        raise ValueError("Shuffle webhook URL must use HTTP or HTTPS")
+    payload = json.dumps(alert, separators=(",", ":")).encode("utf-8")
+    return Request(
+        hook_url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+
+def send_alert(alert_path: str, hook_url: str, opener=urlopen) -> None:
+    """Read Wazuh's temporary alert and send it to Shuffle."""
+    with Path(alert_path).open(encoding="utf-8") as alert_file:
+        alert = json.load(alert_file)
+    request = build_request(alert, hook_url)
+    with opener(request, timeout=10) as response:
+        if not 200 <= response.status < 300:
+            raise RuntimeError("Shuffle returned a non-success status")
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv if argv is None else argv
+    # Wazuh passes alert file, API key (empty here), and hook URL.
+    if len(args) < 4 or not args[1] or not args[3]:
+        print("custom-shuffle: expected alert file and hook URL", file=sys.stderr)
+        return 1
+    try:
+        send_alert(args[1], args[3])
+    except (OSError, ValueError, json.JSONDecodeError, URLError, RuntimeError) as exc:
+        # Never include exception text: URL errors can contain the secret webhook URL.
+        print(f"custom-shuffle: delivery failed ({type(exc).__name__})", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

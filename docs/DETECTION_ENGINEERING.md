@@ -1,6 +1,6 @@
 # Detection Engineering & MITRE ATT&CK Mapping
 
-A detailed analysis of detection mechanisms, correlation rules, log decoding logic, and threat framework alignments.
+A reference for intended detections, correlation rules, log decoding, and threat-framework alignments. The table below describes configuration intent; repository CI does not execute `wazuh-logtest` or test active response on a live agent. Use Wazuh's [custom rule guidance](https://documentation.wazuh.com/4.14/user-manual/ruleset/rules/custom.html) and test sample events against the exact installed ruleset before relying on a detection.
 
 ---
 
@@ -9,10 +9,10 @@ A detailed analysis of detection mechanisms, correlation rules, log decoding log
 | Attack Phase | Log Source | Matched Rule ID | Rule Level | Description | Escalation Trigger |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Initial Probing** | `/var/log/auth.log` | `5710` | 5 | `sshd: SSH authentication failed` | Track failure count per source IP |
-| **SSH Brute-Force** | `/var/log/auth.log` | `5763` | 10 | `sshd: Maximum authentication attempts exceeded` | Triggers Rule `651` (`firewall-drop`) |
-| **PowerShell Bypass** | `Microsoft-Windows-PowerShell/Operational` | `67027` | 10 | `Suspicious process creation: PowerShell ExecutionPolicy Bypass` | Forward to Shuffle Webhook |
-| **Download Cradle** | `Microsoft-Windows-PowerShell/Operational` | `91837` | 12 | `PowerShell: DownloadString / IEX cradle detected` | Triggers Rule `657` (`netsh` isolation) |
-| **C2 Service Creation** | `System.evtx` (Event 7045) | `92650` | 12 | `New Windows Service installed dynamically` | Triggers Rule `657` (`netsh` isolation) |
+| **SSH Brute-Force** | `/var/log/auth.log` | `100003` | 10 | `sshd: Maximum authentication attempts exceeded` | Intended action: `firewall-drop`; runtime unverified |
+| **PowerShell Bypass** | `Microsoft-Windows-PowerShell/Operational` | `100005` | 10 | `Suspicious process creation: PowerShell ExecutionPolicy Bypass` | Forward to Shuffle Webhook |
+| **Download Cradle** | `Microsoft-Windows-PowerShell/Operational` | `100004` | 12 | `PowerShell: DownloadString / IEX cradle detected` | Intended action: Windows response; runtime unverified |
+| **C2 Service Creation** | `System.evtx` (Event 7045) | `100006` | 12 | `New Windows Service installed dynamically` | Intended action: Windows response; runtime unverified |
 
 ---
 
@@ -30,7 +30,7 @@ A detailed analysis of detection mechanisms, correlation rules, log decoding log
 ├─────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
 │ T1110.003               │ T1021.002               │ T1071.001               │ Automated Containment   │
 │ Password Spraying       │ SMB / Admin Shares      │ Web Protocols (HTTP C2) │ firewall-drop & netsh   │
-│ (Dictionary brute force)│ (Remote service exec)   │ (Payload download)      │ (Sub-second mitigation) │
+│ (Dictionary brute force)│ (Remote service exec)   │ (Payload download)      │ (Lab-only reference) │
 └─────────────────────────┴─────────────────────────┴─────────────────────────┴─────────────────────────┘
 ```
 
@@ -66,4 +66,4 @@ Wazuh Windows Agent captures PowerShell Script Block logs in JSON format from th
   }
 }
 ```
-Rule `91837` inspects the `scriptBlockText` field for regex matches against known malicious execution patterns (`IEX`, `DownloadString`, `WebClient`, `-EncodedCommand`).
+Rule `100004` inspects the `scriptBlockText` field for regex matches against known malicious execution patterns (`IEX`, `DownloadString`, `WebClient`, `-EncodedCommand`).

@@ -9,7 +9,7 @@
   [![Network](https://img.shields.io/badge/Network-Tailscale%20Mesh%20VPN-06b6d4?style=for-the-badge&logo=tailscale&logoColor=white)](https://tailscale.com/)
   [![Threat Intel](https://img.shields.io/badge/Threat%20Intel-VirusTotal%20v3%20API-3b82f6?style=for-the-badge&logo=virustotal&logoColor=white)](https://www.virustotal.com/)
   [![Framework](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-ea580c?style=for-the-badge&logo=target&logoColor=white)](https://attack.mitre.org/)
-  [![Containment](https://img.shields.io/badge/Containment-Active%20Response%20(Sub--Second)-16a34a?style=for-the-badge&logo=shield&logoColor=white)](#-automated-threat-response-pipeline)
+  [![Active response](https://img.shields.io/badge/Active%20Response-Lab%20Reference-16a34a?style=for-the-badge&logo=shield&logoColor=white)](#-automated-threat-response-pipeline)
   [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
   [![Lab validation](https://github.com/0xsabry/wazuh-shuffle-soar-soc-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/0xsabry/wazuh-shuffle-soar-soc-lab/actions/workflows/ci.yml)
 
@@ -17,7 +17,7 @@
 
   <p align="center">
     <strong>A distributed 5-node security operations and automated incident response ecosystem.</strong><br>
-    Engineered with zero-trust mesh networking, real-time log ingestion, correlation decoders, threat intelligence enrichment, and automated endpoint containment.
+    Documents a defensive lab design using zero-trust mesh networking, Wazuh detections, Shuffle enrichment, and response examples.
   </p>
 
   <p align="center">
@@ -63,7 +63,7 @@
 
 ## 🌟 Overview & Key Highlights
 
-This repository contains the complete documentation, configuration code, detection rules, SOAR playbooks, and evidence artifacts for a **5-person distributed cybersecurity operations lab**. 
+This repository collects documentation, configuration examples, detection rules, SOAR workflow design, and evidence from a **5-person distributed cybersecurity operations lab**.
 
 Instead of operating inside a single local hypervisor, our team connected **5 separate home labs and cloud instances across different physical locations** into a unified, zero-trust private network.
 
@@ -79,7 +79,7 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
                       ▼ (Encrypted WireGuard Mesh · 100.x Subnet)
             [ Wazuh SIEM Manager  ] ──▶ Real-time log decoding & rule correlation
                       │
-                      ▼ (Webhook JSON Payload · Sub-second latency)
+                      ▼ (Webhook JSON Payload · latency not measured)
             [ Shuffle SOAR Engine ] ──▶ VirusTotal API lookup & decision tree
                       │
                       ▼ (Authenticated JWT Wazuh REST API)
@@ -89,8 +89,8 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
 ### Key Engineering Capabilities
 - 🌐 **Zero-Trust Mesh Networking**: Replaced traditional port-forwarding with an encrypted **Tailscale WireGuard mesh** providing a flat `100.x` IPv4 space with owner-enforced device access control.
 - ⚡ **Centralized SIEM Management**: Deployed **Wazuh 4.14** from an all-in-one appliance to ingest Syslog, Sysmon, Auditd, and Windows Event logs from disparate endpoints.
-- 🔄 **SOAR Automation & Playbooks**: Configured **Shuffle SOAR** on Docker to listen for qualifying alert webhooks, parse indicators of compromise (IOCs), query threat intelligence feeds, and orchestrate responses.
-- 🛡️ **Sub-Second Bi-Directional Containment**: Created automated active-response actions that dynamically block attacker IPs via `iptables` on Linux hosts and isolate endpoints via `netsh` on Windows systems in **$< 1.5$ seconds**.
+- 🔄 **SOAR Integration Artifacts**: Includes a Wazuh custom webhook integration and a reference Shuffle workflow design. The workflow is not a native export, and CI does not validate end-to-end orchestration.
+- 🛡️ **Active-response reference artifacts**: Includes example containment configuration and scripts. The committed offline checks do not validate execution on a Wazuh agent.
 
 ---
 
@@ -100,7 +100,7 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
   <img src="assets/animations/architecture-flow.svg" alt="Distributed SOC & SOAR Architecture Diagram" width="100%" />
 </div>
 
-### Dataflow Specifications
+### Intended Dataflow
 1. **Agent Telemetry (Port 1514/TCP)**: Victim endpoints continuously stream OSSEC-encrypted audit and event logs to the central Wazuh Manager over their private Tailscale addresses (`100.64.0.10`).
 2. **Alert Triggering (Rule Engine)**: Custom XML correlation rules evaluate log streams against frequency thresholds, regex patterns, and MITRE ATT&CK criteria.
 3. **Webhook Dispatch (HTTP/JSON)**: `ossec-integratord` packages alerts of severity Level $\ge 6$ and dispatches JSON payloads to the Shuffle SOAR webhook listener on port `3001`.
@@ -143,36 +143,28 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
 
 ## 🎯 Attack Scenarios & Detection Matrix
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                       ATTACK & DETECTION MATRIX                                        │
-├──────────────────┬──────────────────────┬──────────────────────┬─────────────┬─────────────────────────┤
-│ Attack Scenario  │ Offensive Technique  │ Log Source / Event   │ Wazuh Rules │ Active Containment      │
-├──────────────────┼──────────────────────┼──────────────────────┼─────────────┼─────────────────────────┤
-│ 01. SSH Brute    │ Hydra Dictionary     │ /var/log/auth.log    │ 5710, 5712, │ Rule 651: firewall-drop │
-│     Force Attack │ Password Guessing    │ (sshd failures)      │ 5763 (Lv10) │ Attacker IP dropped     │
-├──────────────────┼──────────────────────┼──────────────────────┼─────────────┼─────────────────────────┤
-│ 02. Suspicious   │ ExecutionPolicy      │ PowerShell/Oper.     │ 67027,      │ Rule 657: netsh isolate │
-│     PowerShell   │ Bypass + IEX Cradle  │ Event ID 4104        │ 91837 (Lv12)│ Endpoint isolated       │
-├──────────────────┼──────────────────────┼──────────────────────┼─────────────┼─────────────────────────┤
-│ 03. Command &    │ PsExec Remote        │ System.evtx          │ 92650 (Lv12)│ Rule 657: netsh isolate │
-│     Control (C2) │ Service Installation │ Event ID 7045        │             │ Inbound/Outbound cut    │
-└──────────────────┴──────────────────────┴──────────────────────┴─────────────┴─────────────────────────┘
-```
+The rules below are intended examples, not runtime-verified detections. Offline CI checks structure only.
+
+| Scenario | Local rule IDs | Intended response | Runtime status |
+| --- | --- | --- | --- |
+| SSH brute force | `100001`–`100003` (with built-in parent `5710`) | `firewall-drop` | Unverified on a live agent |
+| PowerShell activity | `100004`–`100005` | Windows response design | Unverified on a live agent |
+| Service creation | `100006` | Windows response design | Unverified on a live agent |
 
 ### Scenario 1: SSH Brute-Force Credential Attack (Ubuntu)
+The scenario descriptions below are reference examples from the lab. The current branch has not reproduced each detection or containment outcome end to end.
 - **Vector**: Remote SSH password spraying using `hydra` and `rockyou.txt`.
-- **Detection**: Log decoders matched repeated authentication failures within a 120-second sliding window, triggering Rule `5763` (*Maximum authentication attempts exceeded*).
+- **Detection**: Log decoders matched repeated authentication failures within a 120-second sliding window, triggering Rule `100003` (*Maximum authentication attempts exceeded*).
 - **Mitigation**: Triggered active-response command `firewall-drop.sh`, immediately writing an `iptables` drop rule for the attacker's IP.
 
 ### Scenario 2: Suspicious PowerShell Download Cradle (Windows 11)
 - **Vector**: Execution policy bypass paired with an in-memory `IEX (New-Object Net.WebClient).DownloadString(...)` payload cradle.
-- **Detection**: Captured via Script Block Logging (Event 4104), triggering Rule `91837` (*Suspicious PowerShell string execution*).
+- **Detection**: Captured via Script Block Logging (Event 4104), triggering Rule `100004` (*Suspicious PowerShell string execution*).
 - **Mitigation**: Triggered active-response command `netsh.cmd`, placing the host network stack into isolated quarantine.
 
 ### Scenario 3: C2 / Remote Service Creation (Windows Server 2022)
 - **Vector**: PsExec-style lateral execution installing a persistence service (`sc.exe create ...`).
-- **Detection**: Windows System Event 7045 detected, triggering Rule `92650` (*New Windows Service Created - Severity Level 12*).
+- **Detection**: Windows System Event 7045 detected, triggering Rule `100006` (*New Windows Service Created - Severity Level 12*).
 - **Mitigation**: Automated SOAR playbook quarantined the host and notified analysts.
 
 ---
@@ -195,7 +187,7 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
 
 ## 🔄 SOAR Playbook Workflows
 
-The **Shuffle SOAR** playbook executes a multi-stage decision pipeline upon receiving Wazuh alerts:
+The workflow diagram below describes the intended multi-stage Shuffle design. The committed JSON is not a native Shuffle export and its runtime nodes are not validated by CI:
 
 ```
                       ┌─────────────────────────────────┐
@@ -209,7 +201,7 @@ The **Shuffle SOAR** playbook executes a multi-stage decision pipeline upon rece
                                        │
                     ┌──────────────────┴──────────────────┐
                     │                                     │
-           [ Rule == 5763 (SSH) ]               [ Rule == 91837 / 92650 ]
+           [ Rule == 100003 (SSH) ]               [ Rule == 100004 / 100006 ]
                     │                                     │
                     ▼                                     ▼
         ┌───────────────────────┐             ┌───────────────────────┐
@@ -242,17 +234,19 @@ The **Shuffle SOAR** playbook executes a multi-stage decision pipeline upon rece
 
 | Tactic | Technique ID | Technique Name | Detection Rule | Lab Scenario |
 | :--- | :--- | :--- | :--- | :--- |
-| **Initial Access** | `T1110.001` | Password Guessing | Wazuh Rule `5710` / `5763` | Hydra SSH Attack (Ubuntu) |
-| **Credential Access** | `T1110.003` | Password Spraying | Wazuh Rule `5763` | Hydra SSH Attack (Ubuntu) |
-| **Execution** | `T1059.001` | PowerShell Scripting | Wazuh Rule `91837` | Download Cradle (Win 11) |
-| **Defense Evasion** | `T1562.001` | Disable or Modify Tools | Wazuh Rule `67027` | ExecutionPolicy Bypass |
-| **Persistence** | `T1543.003` | Windows Service Creation | Wazuh Rule `92650` | PsExec Service Install |
-| **Lateral Movement** | `T1021.002` | SMB / Windows Admin Shares | Wazuh Rule `92650` | Remote Service Execution |
+| **Initial Access** | `T1110.001` | Password Guessing | Wazuh Rule `5710` / `100003` | Hydra SSH Attack (Ubuntu) |
+| **Credential Access** | `T1110.003` | Password Spraying | Wazuh Rule `100003` | Hydra SSH Attack (Ubuntu) |
+| **Execution** | `T1059.001` | PowerShell Scripting | Wazuh Rule `100004` | Download Cradle (Win 11) |
+| **Defense Evasion** | `T1562.001` | Disable or Modify Tools | Wazuh Rule `100005` | ExecutionPolicy Bypass |
+| **Persistence** | `T1543.003` | Windows Service Creation | Wazuh Rule `100006` | PsExec Service Install |
+| **Lateral Movement** | `T1021.002` | SMB / Windows Admin Shares | Wazuh Rule `100006` | Remote Service Execution |
 | **Command & Control** | `T1071.001` | Web Protocols (HTTP C2) | VirusTotal Integration | Payload Fetch & Beaconing |
 
 ---
 
 ## 📸 Visual Evidence Gallery
+
+These are historical screenshots from the lab. They document what was observed in that environment; they do not prove that the current committed configurations reproduce each result. The repository's automated checks are offline structural checks only.
 
 ### 1. Wazuh SIEM Deployment & Hardening
 <table>
@@ -353,17 +347,17 @@ The **Shuffle SOAR** playbook executes a multi-stage decision pipeline upon rece
   <tr>
     <td width="50%" align="center">
       <img src="assets/images/05_wazuh_detections/wazuh_ssh_bruteforce_rule_detection.png" alt="Wazuh SSH Alert" /><br>
-      <sub><strong>15 · SSH Brute Force Detection</strong><br>Rule 5763 triggered following threshold of repeated failed logins.</sub>
+      <sub><strong>15 · SSH Brute Force Detection</strong><br>Historical screenshot shows built-in rule 5763; the repository rule is now 100003 and needs runtime validation.</sub>
     </td>
     <td width="50%" align="center">
       <img src="assets/images/05_wazuh_detections/wazuh_suspicious_powershell_detection.png" alt="PowerShell Detection" /><br>
-      <sub><strong>16 · Suspicious PowerShell Detection</strong><br>Rule 91837 capturing IEX download cradle in script block logs.</sub>
+      <sub><strong>16 · Suspicious PowerShell Detection</strong><br>Historical screenshot shows built-in rule 91837; the repository rule is now 100004 and needs runtime validation.</sub>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
       <img src="assets/images/05_wazuh_detections/wazuh_c2_new_service_created_detection.png" alt="C2 Detection" /><br>
-      <sub><strong>17 · Command & Control Service Creation Detection</strong><br>Rule 92650 (Level 12) detecting dynamic service creation on Windows Server target (Bushnak).</sub>
+      <sub><strong>17 · Command & Control Service Creation Detection</strong><br>Historical screenshot shows built-in rule 92650; the repository rule is now 100006 and needs runtime validation.</sub>
     </td>
   </tr>
 </table>
@@ -442,9 +436,11 @@ python scripts/validate_lab_assets.py
 python -m unittest discover -s tests -v
 ```
 
-These checks validate XML/SVG syntax, unique numeric Wazuh rule IDs, and
-Shuffle workflow branch references. They do not deploy the lab or contact any
-of its services.
+These checks validate XML/SVG syntax, the Wazuh 4.14 auth-option allowlist,
+custom rule ID range and references, required custom integration files, and
+workflow graph references. Unit tests also verify that the custom Shuffle
+integration forwards the original alert JSON. They do not execute Wazuh,
+import the workflow into Shuffle, or verify a live alert or containment.
 
 ---
 
@@ -496,9 +492,9 @@ of its services.
 
 ## 👨‍💻 Author & Credits
 
-**Mohamed Sabry** · SOC Analyst & DFIR Specialist  
-- 🐙 GitHub: [@0xsabry](https://github.com/0xsabry)  
-- 💼 LinkedIn: [Mohamed Sabry](https://www.linkedin.com/in/mohamed-sabry-hamdan/)  
+**Mohamed Sabry** · SOC Analyst & DFIR Specialist
+- 🐙 GitHub: [@0xsabry](https://github.com/0xsabry)
+- 💼 LinkedIn: [Mohamed Sabry](https://www.linkedin.com/in/mohamed-sabry-hamdan/)
 - 📧 Email: `2201381@student.eelu.edu.eg`
 
 ### Team Contributors
