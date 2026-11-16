@@ -1,4 +1,4 @@
-name: SOC Lab Lint & Verification
+name: SOC Lab Configuration Validation
 
 on:
   push:
@@ -7,26 +7,20 @@ on:
     branches: [ main ]
 
 jobs:
-  validate-assets:
-    name: Validate Markdown & XML Schemas
+  validate-lab-assets:
+    name: Validate lab assets
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Verify SVG Files
-        run: |
-          echo "Checking SVGs..."
-          test -f assets/animations/banner-animated.svg
-          test -f assets/animations/architecture-flow.svg
-          test -f assets/animations/threat-response-loop.svg
-          test -f assets/animations/terminal-simulation.svg
-          echo "All animated SVGs exist!"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-      - name: Verify Configuration Files
-        run: |
-          echo "Checking configuration files..."
-          test -f configs/ossec.conf
-          test -f configs/rules/local_rules.xml
-          test -f configs/shuffle/soc_automated_response_workflow.json
-          echo "All configuration files exist and are intact!"
+      - name: Validate XML, SVG, Wazuh rule IDs, and Shuffle branches
+        run: python scripts/validate_lab_assets.py
+
+      - name: Run validator tests
+        run: python -m unittest discover -s tests -v
