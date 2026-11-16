@@ -54,6 +54,7 @@
   - [7. Active Response & Host Containment](#7-active-response--host-containment)
 - [Quick Start & Reproduction](#-quick-start--reproduction)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Security and Public Evidence](docs/SECURITY.md)
 - [Local Validation](#-local-validation)
 - [Repository Structure](#-repository-structure)
 - [Author & Credits](#-author--credits)
