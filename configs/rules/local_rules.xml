@@ -28,8 +28,8 @@
     <group>authentication_failures,bruteforce,</group>
   </rule>
 
-  <!-- Trigger Active Response Rule 651 (firewall-drop) on repeated failures -->
-  <rule id="5763" level="10" frequency="8" timeframe="120">
+  <!-- Trigger Active Response Rule 100007 (firewall-drop) on repeated failures -->
+  <rule id="100003" level="10" frequency="8" timeframe="120">
     <if_matched_sid>5710</if_matched_sid>
     <same_source_ip />
     <description>sshd: Maximum authentication attempts exceeded - Host brute-force threshold reached.</description>
@@ -42,7 +42,7 @@
   <!-- ======================================================== -->
   <!-- 2. SUSPICIOUS POWERSHELL EXECUTION (Windows Target: Karim)-->
   <!-- ======================================================== -->
-  <rule id="91837" level="12">
+  <rule id="100004" level="12">
     <if_group>windows</if_group>
     <match>Invoke-Expression|IEX|DownloadString|ExecutionPolicy Bypass|-EncodedCommand|Get-Content -Stream</match>
     <description>Windows: Suspicious PowerShell execution cradle or execution policy bypass detected.</description>
@@ -54,7 +54,7 @@
     <group>powershell,execution,defense_evasion,</group>
   </rule>
 
-  <rule id="67027" level="10">
+  <rule id="100005" level="10">
     <if_group>windows</if_group>
     <match>powershell.exe -ExecutionPolicy Bypass|powershell.exe -nop -w hidden</match>
     <description>Windows: Hidden or unconstrained PowerShell process spawned by suspicious parent.</description>
@@ -68,7 +68,7 @@
   <!-- ======================================================== -->
   <!-- 3. COMMAND & CONTROL / SERVICE CREATION (Target: Bushnak) -->
   <!-- ======================================================== -->
-  <rule id="92650" level="12">
+  <rule id="100006" level="12">
     <if_group>windows</if_group>
     <match>EventID: 7045|New Service Was Installed</match>
     <description>Windows Server: New service created dynamically (Potential PsExec / Lateral Movement / C2 Persistence).</description>
@@ -82,14 +82,14 @@
   <!-- ======================================================== -->
   <!-- 4. ACTIVE RESPONSE ESCALATION LOG RULES                  -->
   <!-- ======================================================== -->
-  <rule id="651" level="3">
+  <rule id="100007" level="3">
     <if_group>active_response</if_group>
     <match>firewall-drop</match>
     <description>Active Response: firewall-drop triggered - Attacker IP blocked via iptables.</description>
     <group>active_response,</group>
   </rule>
 
-  <rule id="657" level="3">
+  <rule id="100008" level="3">
     <if_group>active_response</if_group>
     <match>netsh</match>
     <description>Active Response: netsh isolation executed - Host/Service network access blocked.</description>

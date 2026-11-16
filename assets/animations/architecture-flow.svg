@@ -151,9 +151,9 @@
     <text x="14" y="74" fill="#94a3b8" font-size="9.5">✓ OVA VirtualBox Node</text>
     <text x="14" y="92" fill="#94a3b8" font-size="9.5">✓ Log Decoding Engine</text>
     <text x="14" y="110" fill="#94a3b8" font-size="9.5">✓ Correlation Rules:</text>
-    <text x="22" y="126" fill="#f87171" font-size="8.5">· SSH Rules 5710-5763</text>
-    <text x="22" y="140" fill="#fb923c" font-size="8.5">· PowerShell Rule 91837</text>
-    <text x="22" y="154" fill="#c084fc" font-size="8.5">· C2 Service Rule 92650</text>
+    <text x="22" y="126" fill="#f87171" font-size="8.5">· SSH Rules 5710-100003</text>
+    <text x="22" y="140" fill="#fb923c" font-size="8.5">· PowerShell Rule 100004</text>
+    <text x="22" y="154" fill="#c084fc" font-size="8.5">· C2 Service Rule 100006</text>
     <text x="14" y="172" fill="#10b981" font-size="9" font-weight="600">● Webhook Dispatcher</text>
   </g>
 

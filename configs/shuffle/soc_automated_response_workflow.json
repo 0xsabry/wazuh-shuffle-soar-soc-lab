@@ -39,7 +39,7 @@
       "parameters": [
         {
           "name": "condition",
-          "value": "$action_parse_alert.rule.id == '5763' ? 'SSH_CONTAIN' : ($action_parse_alert.rule.id == '91837' ? 'POWERSHELL_CONTAIN' : 'C2_CONTAIN')"
+          "value": "$action_parse_alert.rule.id == '100003' ? 'SSH_CONTAIN' : ($action_parse_alert.rule.id == '100004' ? 'POWERSHELL_CONTAIN' : 'C2_CONTAIN')"
         }
       ]
     },
@@ -90,7 +90,7 @@
       "parameters": [
         {
           "name": "url",
-          "value": "https://100.64.0.10:55000/active-response"
+          "value": "https://<WAZUH_MANAGER>:55000/active-response?agents_list=$action_parse_alert.agent.id"
         },
         {
           "name": "headers",
@@ -98,7 +98,7 @@
         },
         {
           "name": "body",
-          "value": "{\"command\": \"firewall-drop0\", \"custom\": false, \"agent_list\": [\"$action_parse_alert.agent.id\"], \"arguments\": [\"-$action_parse_alert.data.srcip\"]}"
+          "value": "{\"command\": \"firewall-drop600\", \"alert\": {\"data\": {\"srcip\": \"$action_parse_alert.data.srcip\"}}}"
         }
       ]
     }

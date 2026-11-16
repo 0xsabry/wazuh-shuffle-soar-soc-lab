@@ -51,7 +51,7 @@
     <!-- Line 2: Detection Event -->
     <text y="48">
       <tspan class="info-tag">[18:24:02]</tspan>
-      <tspan class="alert-tag"> [ALERT - RULE 5763 - LEVEL 10]</tspan>
+      <tspan class="alert-tag"> [ALERT - RULE 100003 - LEVEL 10]</tspan>
       <tspan fill="#f1f5f9"> sshd: Maximum authentication attempts exceeded</tspan>
     </text>
     <text y="68" fill="#94a3b8">
@@ -76,7 +76,7 @@
       <tspan fill="#f1f5f9"> Workflow 'SOC-Auto-Containment' triggered (Exec ID: <tspan fill="#38bdf8">sh-exec-9014</tspan>)</tspan>
     </text>
     <text y="162" fill="#94a3b8">
-      │  ├─ Branch Filter: <tspan fill="#facc15">Rule 5763 == True</tspan> ➔ Route: <tspan fill="#38bdf8">Wazuh Active-Response API</tspan>
+      │  ├─ Branch Filter: <tspan fill="#facc15">Rule 100003 == True</tspan> ➔ Route: <tspan fill="#38bdf8">Wazuh Active-Response API</tspan>
     </text>
     <text y="180" fill="#94a3b8">
       │  ├─ Intel Query: <tspan fill="#34d399">VirusTotal API v3</tspan> ➔ Attacker Subnet Reputation Checked

@@ -65,7 +65,7 @@ The interaction between Wazuh SIEM and Shuffle SOAR operates in a closed loop:
 3. **Webhook Dispatch**: The `ossec-integratord` daemon constructs a JSON payload containing full alert context (Rule ID, Source IP, Agent ID, Full Command Line) and posts it over HTTP/HTTPS to Shuffle's webhook URL (`http://100.64.0.14:3001/api/v1/hooks/...`).
 4. **SOAR Orchestration**:
    - Parses JSON fields.
-   - Evaluates branch conditions (Rule 5763 vs Rule 91837 vs Rule 92650).
+   - Evaluates branch conditions (Rule 100003 vs Rule 100004 vs Rule 100006).
    - Queries VirusTotal API v3 for IOC reputation.
    - Obtains a short-lived JWT token from Wazuh REST API (`/security/user/authenticate`).
    - Executes Active Response via `/active-response` endpoint.
