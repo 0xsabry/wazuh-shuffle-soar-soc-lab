@@ -53,6 +53,7 @@
   - [6. Shuffle SOAR & VirusTotal Integration](#6-shuffle-soar--virustotal-integration)
   - [7. Active Response & Host Containment](#7-active-response--host-containment)
 - [Quick Start & Reproduction](#-quick-start--reproduction)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Local Validation](#-local-validation)
 - [Repository Structure](#-repository-structure)
 - [Author & Credits](#-author--credits)
@@ -427,6 +428,7 @@ Follow our comprehensive step-by-step guides in the `docs/` directory:
 - [📖 Detection Engineering & MITRE Mapping](docs/DETECTION_ENGINEERING.md)
 - [📖 SOAR Automation & Playbooks](docs/SOAR_PLAYBOOKS.md)
 - [📖 Complete Lab Setup Guide](docs/LAB_SETUP_GUIDE.md)
+- [🧭 Troubleshooting Runbook](docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -480,7 +482,8 @@ of its services.
 │   ├── ATTACK_SCENARIOS.md                # Offensive simulation playbooks
 │   ├── DETECTION_ENGINEERING.md           # Rule correlation & MITRE mapping
 │   ├── SOAR_PLAYBOOKS.md                  # Shuffle automation & JWT API guide
-│   └── LAB_SETUP_GUIDE.md                 # Complete reproduction instructions
+│   ├── LAB_SETUP_GUIDE.md                 # Lab deployment instructions
+│   └── TROUBLESHOOTING.md                 # Event-path diagnostics and safe triage
 ├── .gitignore                             # Git ignore rules
 ├── LICENSE                                # MIT Open Source License
 ├── CONTRIBUTING.md                        # Contribution guidelines

@@ -46,7 +46,7 @@ A complete, reproducible guide to building the distributed Wazuh SIEM + Shuffle 
    - `win11-victim` (`100.64.0.12`)
    - `win2022-srv` (`100.64.0.13`)
    - `shuffle-soar` (`100.64.0.14`)
-4. Disable key expiry on lab machines to maintain continuous connectivity.
+4. Keep key-expiry policy appropriate to each device. Disabling expiry can reduce security; only consider it for a trusted, unattended lab server when uptime requires it, and document the trade-off. Leave expiry enabled for human-operated devices. See [Tailscale key expiry](https://tailscale.com/docs/features/access-control/key-expiry).
 
 ---
 
@@ -84,6 +84,8 @@ NET START Wazuh
 4. Configure environment variables in Shuffle:
    - `VIRUSTOTAL_API_KEY`: Your VirusTotal API Key.
    - `WAZUH_API_CREDENTIALS`: `wazuh-wui:password` (Base64 encoded).
+
+Store real values only in Shuffle's local secret/configuration mechanism. The example above is a placeholder; never commit credentials, tokens, generated webhook URLs, or screenshots containing them.
 
 ---
 
