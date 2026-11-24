@@ -36,6 +36,7 @@
   <text x="460" y="24" fill="#94a3b8" font-size="12" font-weight="600" text-anchor="middle" font-family="'Segoe UI', sans-serif">
     root@wazuh-manager-soc:~ [Tailnet Mesh: 100.64.0.10]
   </text>
+  <text x="908" y="24" fill="#f59e0b" font-size="11" font-weight="700" text-anchor="end" font-family="'Segoe UI', sans-serif">SIMULATED</text>
 
   <!-- Terminal Body Content -->
   <g transform="translate(24, 65)" font-size="12" letter-spacing="0.3">
@@ -73,7 +74,7 @@
     <text y="142">
       <tspan class="info-tag">[18:24:02.850]</tspan>
       <tspan class="soar-tag"> [SHUFFLE PLAYBOOK]</tspan>
-      <tspan fill="#f1f5f9"> Workflow 'SOC-Auto-Containment' triggered (Exec ID: <tspan fill="#38bdf8">sh-exec-9014</tspan>)</tspan>
+      <tspan fill="#f1f5f9"> Workflow 'SOC-Auto-Containment' triggered (simulated run — no real exec ID)</tspan>
     </text>
     <text y="162" fill="#94a3b8">
       │  ├─ Branch Filter: <tspan fill="#facc15">Rule 100003 == True</tspan> ➔ Route: <tspan fill="#38bdf8">Wazuh Active-Response API</tspan>
@@ -99,8 +100,8 @@
     <!-- Line 6: Verification & Complete -->
     <text y="274">
       <tspan class="info-tag">[18:24:03.680]</tspan>
-      <tspan class="success-tag"> [STATUS: CONTAINED]</tspan>
-      <tspan fill="#4ade80"> Threat neutralized in 1.27s. Host mohamedmassoud isolated from attacker.</tspan>
+      <tspan class="success-tag"> [STATUS: SIMULATED]</tspan>
+      <tspan fill="#4ade80"> Simulated outcome — no latency measured, no live run shown.</tspan>
     </text>
 
     <!-- Cursor Prompt -->
