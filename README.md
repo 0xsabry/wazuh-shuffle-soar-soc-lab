@@ -16,7 +16,7 @@
   <br>
 
   <p align="center">
-    <strong>A distributed 5-node security operations and automated incident response ecosystem.</strong><br>
+    <strong>A documented 5-node distributed SOC lab with a designed incident-response automation workflow.</strong><br>
     Documents a defensive lab design using zero-trust mesh networking, Wazuh detections, Shuffle enrichment, and response examples.
   </p>
 
