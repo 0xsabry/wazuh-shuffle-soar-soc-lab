@@ -529,7 +529,7 @@ import the workflow into Shuffle, or verify a live alert or containment.
 
 **Mohamed Sabry Hamdan** · Cybersecurity Analyst | SOC | Incident Response | DFIR | Detection
 - 🐙 GitHub: [@0xsabry](https://github.com/0xsabry)
-- 💼 LinkedIn: [Mohamed Sabry](https://www.linkedin.com/in/mohamed-sabry-hamdan/)
+- 💼 LinkedIn: [Mohamed Sabry Hamdan](https://www.linkedin.com/in/mohamed-sabry-hamdan/)
 - 📧 Email: `mohamedsabry01144@gmail.com`
 
 ### Team Contributors
