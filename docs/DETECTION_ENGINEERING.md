@@ -30,7 +30,7 @@ A reference for intended detections, correlation rules, log decoding, and threat
 ├─────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
 │ T1110.003               │ T1021.002               │ T1071.001               │ Automated Containment   │
 │ Password Spraying       │ SMB / Admin Shares      │ Web Protocols (HTTP C2) │ firewall-drop & netsh   │
-│ (Dictionary brute force)│ (Remote service exec)   │ (Payload download)      │ (Lab-only reference) │
+│ (Dictionary brute force)│ (Remote service exec)   │ (Payload download)      │ (Intended; runtime unverified) │
 └─────────────────────────┴─────────────────────────┴─────────────────────────┴─────────────────────────┘
 ```
 
