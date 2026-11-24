@@ -541,6 +541,6 @@ import the workflow into Shuffle, or verify a live alert or containment.
 ---
 
 <div align="center">
-  <sub>Built with pride for academic research & cybersecurity portfolio excellence · August 2026</sub><br>
+  <sub>Built for academic research and as a cybersecurity portfolio project · August 2026</sub><br>
   <sub>⭐ If you find this project helpful, please consider giving it a star on GitHub! ⭐</sub>
 </div>
