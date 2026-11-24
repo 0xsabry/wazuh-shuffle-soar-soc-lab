@@ -41,7 +41,7 @@
 - [Distributed Tailnet Mesh Topology](#-distributed-tailnet-mesh-topology)
 - [Attack Scenarios & Detection Matrix](#-attack-scenarios--detection-matrix)
 - [Automated Threat Response Pipeline](#-automated-threat-response-pipeline)
-- [Live SOC Simulation Feed](#-live-soc-simulation-feed)
+- [Simulated SOC Feed (animated illustration)](#-simulated-soc-feed-animated-illustration)
 - [SOAR Playbook Workflows](#-soar-playbook-workflows)
 - [MITRE ATT&CK Matrix](#-mitre-attck-matrix)
 - [Visual Evidence Gallery](#-visual-evidence-gallery)
@@ -86,6 +86,8 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
             [ Active Containment  ] ──▶ Dynamic iptables drop & netsh host isolation
 ```
 
+> The lifecycle above shows the **intended** flow. It is not a record of a validated end-to-end run — see [Validation Status](#-validation-status). In particular, no live-agent containment execution and no measured response latency are evidenced in this repository.
+
 ### Key Engineering Capabilities
 - 🌐 **Zero-Trust Mesh Networking**: Replaced traditional port-forwarding with an encrypted **Tailscale WireGuard mesh** providing a flat `100.x` IPv4 space with owner-enforced device access control.
 - ⚡ **Centralized SIEM Management**: Deployed **Wazuh 4.14** from an all-in-one appliance to ingest Syslog, Sysmon, Auditd, and Windows Event logs from disparate endpoints.
@@ -104,7 +106,7 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
 1. **Agent Telemetry (Port 1514/TCP)**: Victim endpoints continuously stream OSSEC-encrypted audit and event logs to the central Wazuh Manager over their private Tailscale addresses (`100.64.0.10`).
 2. **Alert Triggering (Rule Engine)**: Custom XML correlation rules evaluate log streams against frequency thresholds, regex patterns, and MITRE ATT&CK criteria.
 3. **Webhook Dispatch (HTTP/JSON)**: `ossec-integratord` packages alerts of severity Level $\ge 6$ and dispatches JSON payloads to the Shuffle SOAR webhook listener on port `3001`.
-4. **Threat Intelligence & Response Loop**: Shuffle extracts IPs and hashes, conducts VirusTotal API lookups, authenticates against the Wazuh REST API via JWT, and issues containment instructions back to the affected agent.
+4. **Threat Intelligence & Response Loop (intended design)**: Shuffle is designed to extract IPs and hashes, conduct VirusTotal API lookups, authenticate against the Wazuh REST API via JWT, and issue containment instructions back to the affected agent. None of these steps is evidenced as a live executed run in this repository.
 
 ---
 
@@ -114,9 +116,9 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
 | :--- | :--- | :--- | :--- |
 | **Mohamed Sabry**<br>([@0xsabry](https://github.com/0xsabry)) | **Project Lead & SIEM Architect** | • Wazuh OVA manager deployment & VM hardening<br>• Custom detection rules & OSSEC configuration<br>• Webhook integration & active-response binding | `wazuh-manager`<br>`100.64.0.10` |
 | **Omar Khaled** | **SOAR Automation Engineer** | • Shuffle SOAR Docker deployment & canvas design<br>• Inbound webhook listener & JSON payload parsing<br>• VirusTotal API v3 integration & JWT API callbacks | `shuffle-soar`<br>`100.64.0.14` |
-| **Mohamed Massoud** | **Linux Target & Red Team** | • Ubuntu Server 24.04 LTS endpoint enrollment<br>• Nmap service recon & Hydra SSH brute-force simulation<br>• Verification of Linux `firewall-drop` iptables blocking | `ubuntu-victim`<br>`100.64.0.11` |
-| **Karim** | **Windows Target & Red Team** | • Windows 11 endpoint enrollment & Sysmon integration<br>• ExecutionPolicy bypass & IEX download cradle testing<br>• Verification of Windows `netsh` host isolation | `win11-victim`<br>`100.64.0.12` |
-| **Mohamed Bushnak** | **Server Target & Red Team** | • Windows Server 2022 endpoint enrollment<br>• PsExec-style remote execution & rogue service creation<br>• Verification of Windows Server C2 service containment | `win2022-srv`<br>`100.64.0.13` |
+| **Mohamed Massoud** | **Linux Target & Red Team** | • Ubuntu Server 24.04 LTS endpoint enrollment<br>• Nmap service recon & Hydra SSH brute-force simulation<br>• Linux `firewall-drop` iptables blocking (configuration only; live-agent execution unverified) | `ubuntu-victim`<br>`100.64.0.11` |
+| **Karim** | **Windows Target & Red Team** | • Windows 11 endpoint enrollment & Sysmon integration<br>• ExecutionPolicy bypass & IEX download cradle testing<br>• Windows `netsh` host isolation (configuration only; live-agent execution unverified) | `win11-victim`<br>`100.64.0.12` |
+| **Mohamed Bushnak** | **Server Target & Red Team** | • Windows Server 2022 endpoint enrollment<br>• PsExec-style remote execution & rogue service creation<br>• Windows Server C2 service containment (design only; live-agent execution unverified) | `win2022-srv`<br>`100.64.0.13` |
 
 ---
 
@@ -155,17 +157,17 @@ The rules below are intended examples, not runtime-verified detections. Offline 
 The scenario descriptions below are reference examples from the lab. The current branch has not reproduced each detection or containment outcome end to end.
 - **Vector**: Remote SSH password spraying using `hydra` and `rockyou.txt`.
 - **Detection**: Log decoders matched repeated authentication failures within a 120-second sliding window, triggering Rule `100003` (*Maximum authentication attempts exceeded*).
-- **Mitigation**: Triggered active-response command `firewall-drop.sh`, immediately writing an `iptables` drop rule for the attacker's IP.
+- **Mitigation (intended, unverified on a live agent)**: `ossec.conf` binds rule `100003` to the `firewall-drop` active-response command, which is designed to write an `iptables` drop rule for the attacker's IP. No live-agent execution of this binding is evidenced in this repository.
 
 ### Scenario 2: Suspicious PowerShell Download Cradle (Windows 11)
 - **Vector**: Execution policy bypass paired with an in-memory `IEX (New-Object Net.WebClient).DownloadString(...)` payload cradle.
 - **Detection**: Captured via Script Block Logging (Event 4104), triggering Rule `100004` (*Suspicious PowerShell string execution*).
-- **Mitigation**: Triggered active-response command `netsh.cmd`, placing the host network stack into isolated quarantine.
+- **Mitigation (intended, unverified on a live agent)**: `ossec.conf` binds rules `100004`/`100005` to the `netsh-isolate` active-response command, designed to place the host network stack into isolated quarantine. No live-agent execution of this binding is evidenced in this repository, and the configured executable name (`netsh.cmd`) does not match the committed script file (`netsh-isolate.cmd`) — see [Validation Status](#-validation-status).
 
 ### Scenario 3: C2 / Remote Service Creation (Windows Server 2022)
 - **Vector**: PsExec-style lateral execution installing a persistence service (`sc.exe create ...`).
 - **Detection**: Windows System Event 7045 detected, triggering Rule `100006` (*New Windows Service Created - Severity Level 12*).
-- **Mitigation**: Automated SOAR playbook quarantined the host and notified analysts.
+- **Mitigation (intended, unverified on a live agent)**: the Shuffle playbook design routes rule `100006` alerts through VirusTotal enrichment and a Wazuh REST API callback to trigger active response. No live end-to-end execution — no host quarantine and no analyst notification from a live run — is evidenced in this repository. Rule `100006` also has no direct active-response binding in `configs/ossec.conf`; containment for this scenario depends entirely on the unvalidated API callback path.
 
 ---
 
@@ -177,11 +179,13 @@ The scenario descriptions below are reference examples from the lab. The current
 
 ---
 
-## 💻 Live SOC Simulation Feed
+## 🎬 Simulated SOC Feed (animated illustration)
 
 <div align="center">
-  <img src="assets/animations/terminal-simulation.svg" alt="Live SOC Simulation Terminal" width="100%" />
+  <img src="assets/animations/terminal-simulation.svg" alt="Simulated SOC terminal animation (illustration, not a recorded execution)" width="100%" />
 </div>
+
+> The terminal above is a scripted animation, not a recorded log. Its timestamps, execution ID, and "1.27s" outcome are illustrative values written into the animation; no response latency was measured and no live containment run is shown.
 
 ---
 
@@ -222,11 +226,11 @@ The workflow diagram below describes the intended multi-stage Shuffle design. Th
                       └─────────────────────────────────┘
 ```
 
-1. **Webhook Ingestion**: Wazuh pushes alert JSON containing Rule ID, Timestamp, Agent ID, Source IP, and Raw Log.
-2. **Dynamic Branching**: Rules are classified into direct containment (e.g. active brute-force) or enrichment paths.
-3. **Intel Enrichment**: VirusTotal checks the reputation of external IPs and file hashes.
-4. **Authenticated Callback**: Shuffle generates a bearer JWT via `/security/user/authenticate` and calls `/active-response` on the Wazuh Manager.
-5. **Auditable Logging**: Every execution record is preserved in Shuffle execution logs and Wazuh `active-responses.log`.
+1. **Webhook Ingestion (intended)**: Wazuh is configured to push alert JSON containing Rule ID, Timestamp, Agent ID, Source IP, and Raw Log.
+2. **Dynamic Branching (intended)**: Rules are classified into direct containment (e.g. active brute-force) or enrichment paths.
+3. **Intel Enrichment (intended)**: VirusTotal checks the reputation of external IPs and file hashes.
+4. **Authenticated Callback (intended)**: Shuffle generates a bearer JWT via `/security/user/authenticate` and calls `/active-response` on the Wazuh Manager.
+5. **Auditable Logging (intended)**: A live run would preserve execution records in Shuffle execution logs and Wazuh `active-responses.log`. No such live execution log is included in this repository.
 
 ---
 
@@ -309,7 +313,7 @@ These are historical screenshots from the lab. They document what was observed i
     </td>
     <td align="center">
       <img src="assets/images/03_agent_enrollments/wazuh_agent_filtering_karim.png" alt="Agent Filtering" /><br>
-      <sub><strong>10 · Live Agent Telemetry Verification</strong><br>Filtering events from agent 'karim' in Wazuh Threat Hunting.</sub>
+      <sub><strong>10 · Agent Telemetry in Threat Hunting (historical screenshot)</strong><br>Filtering events from agent 'karim' in Wazuh Threat Hunting.</sub>
     </td>
   </tr>
 </table>
@@ -373,7 +377,7 @@ These are historical screenshots from the lab. They document what was observed i
     </td>
     <td width="50%" align="center">
       <img src="assets/images/06_shuffle_soar_automation/shuffle_virustotal_enrichment_node.jpeg" alt="VirusTotal Node" /><br>
-      <sub><strong>19 · VirusTotal Threat Intel Node</strong><br>Automated reputation query for extracted external indicators.</sub>
+      <sub><strong>19 · VirusTotal Threat Intel Node (workflow canvas, design view)</strong><br>VirusTotal reputation-lookup node as drawn in the playbook canvas. No live lookup result is shown.</sub>
     </td>
   </tr>
   <tr>
@@ -383,17 +387,17 @@ These are historical screenshots from the lab. They document what was observed i
     </td>
     <td align="center">
       <img src="assets/images/06_shuffle_soar_automation/shuffle_wazuh_api_jwt_auth.jpeg" alt="JWT Auth" /><br>
-      <sub><strong>21 · Wazuh REST API Authentication</strong><br>Shuffle obtaining JWT bearer token to execute containment.</sub>
+      <sub><strong>21 · Wazuh REST API Authentication (workflow canvas, design view)</strong><br>JWT authentication node as drawn in the playbook canvas. No live token exchange is shown.</sub>
     </td>
   </tr>
 </table>
 
 ---
 
-### 7. Active Response & Host Containment
+### 7. Active Response & Host Containment (historical evidence only)
 <div align="center">
-  <img src="assets/images/07_active_response_containment/wazuh_active_response_netsh_containment.png" alt="Active Response Execution Log" width="90%" /><br>
-  <sub><strong>22 · Active Response Execution & Host Isolation</strong><br>Wazuh active-response daemon executing netsh containment rule on Windows endpoint following repeated suspicious script executions.</sub>
+  <img src="assets/images/07_active_response_containment/wazuh_active_response_netsh_containment.png" alt="Historical Wazuh Threat Hunting screenshot: firewall-drop active-response event (rule 651) and SSH brute-force alerts (rules 5763/5760)" width="90%" /><br>
+  <sub><strong>22 · Historical firewall-drop Active-Response Event (Linux SSH brute force)</strong><br>Historical Threat Hunting screenshot. What it actually shows: built-in rule <strong>651</strong> ("Host Blocked by firewall-drop Active Response") above built-in SSH alerts — rule <strong>5763</strong> (SSH brute-force attempt) and repeated rule <strong>5760</strong> (SSH authentication failed). It is evidence that a stock <code>firewall-drop</code> active-response event was logged in the historical lab for an SSH brute-force sequence. It does <strong>not</strong> show Windows, <code>netsh</code>, PowerShell, or script execution; it does not show the committed custom rules (<code>100003</code>) or the committed scripts (<code>firewall-drop.sh</code>, <code>netsh-isolate.cmd</code>) running; and the agent name, timestamp, and source details are redacted, so no host, time, or latency can be verified from it. The image is preserved unchanged as historical evidence.</sub>
 </div>
 
 ---
@@ -456,7 +460,7 @@ import the workflow into Shuffle, or verify a live alert or containment.
 │   │   ├── banner-animated.svg            # Animated cyber SOC header banner
 │   │   ├── architecture-flow.svg          # Animated network architecture diagram
 │   │   ├── threat-response-loop.svg       # Animated 6-stage response pipeline
-│   │   └── terminal-simulation.svg        # Animated real-time SOC analyst terminal
+│   │   └── terminal-simulation.svg        # Scripted simulated SOC terminal animation (illustration only)
 │   └── images/                            # Categorized high-resolution evidence gallery
 │       ├── 01_wazuh_manager_deployment/
 │       ├── 02_tailscale_mesh_network/
@@ -470,7 +474,7 @@ import the workflow into Shuffle, or verify a live alert or containment.
 │   ├── rules/
 │   │   └── local_rules.xml                # Custom SSH, PowerShell, and C2 rules
 │   ├── shuffle/
-│   │   └── soc_automated_response_workflow.json # Importable Shuffle SOAR workflow schema
+│   │   └── soc_automated_response_workflow.json # Reference Shuffle workflow design (not a native export)
 │   └── scripts/
 │       ├── firewall-drop.sh               # Linux iptables Active Response script
 │       └── netsh-isolate.cmd              # Windows firewall isolation script
