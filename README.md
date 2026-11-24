@@ -36,6 +36,7 @@
 ## 📑 Table of Contents
 
 - [Overview & Key Highlights](#-overview--key-highlights)
+- [Validation Status](#-validation-status)
 - [Architecture Overview](#-architecture-overview)
 - [Team Roles & Contributions](#-team-roles--contributions)
 - [Distributed Tailnet Mesh Topology](#-distributed-tailnet-mesh-topology)
@@ -93,6 +94,36 @@ Instead of operating inside a single local hypervisor, our team connected **5 se
 - ⚡ **Centralized SIEM Management**: Deployed **Wazuh 4.14** from an all-in-one appliance to ingest Syslog, Sysmon, Auditd, and Windows Event logs from disparate endpoints.
 - 🔄 **SOAR Integration Artifacts**: Includes a Wazuh custom webhook integration and a reference Shuffle workflow design. The workflow is not a native export, and CI does not validate end-to-end orchestration.
 - 🛡️ **Active-response reference artifacts**: Includes example containment configuration and scripts. The committed offline checks do not validate execution on a Wazuh agent.
+
+---
+
+## ✅ Validation Status
+
+Status categories used in this repository:
+
+- **Implemented configuration** — the file is committed and structurally valid (offline CI checks pass).
+- **Offline/static validation** — checked by `scripts/validate_lab_assets.py` or unit tests without running Wazuh, Shuffle, or an agent.
+- **Simulated behavior** — observed in the historical lab or shown in a scripted illustration; not reproduced from this checkout.
+- **Live-agent execution** — observed running on a real enrolled agent with recoverable evidence.
+- **Fully validated end-to-end** — the whole chain (detect → enrich → respond → verify) reproduced and evidenced. Nothing in this repository currently meets this bar.
+
+| Item | Claimed status | Evidenced status | Evidence / note |
+| --- | --- | --- | --- |
+| Wazuh custom rules `100001`–`100008` (`configs/rules/local_rules.xml`) | Detection rules | Implemented configuration + offline/static validation | XML parses; rule IDs, ranges, and references pass CI. No `wazuh-logtest` replay is included. |
+| Wazuh manager config (`configs/ossec.conf`) | Webhook + active-response bindings | Implemented configuration + offline/static validation | XML parses; integration and command references pass CI. |
+| `firewall-drop` binding for rule `100003` (SSH, 600 s timeout) | Automated iptables block | Implemented configuration; live-agent execution **unverified** | Binding is configured. No `active-responses.log` or agent evidence in the repo. The committed `firewall-drop.sh` is a reference copy; no step documents deploying it to an agent's `active-response/bin`. |
+| `netsh-isolate` binding for rules `100004`/`100005` (PowerShell, 1800 s timeout) | Windows host isolation | Implemented configuration; live-agent execution **unverified** | Binding is configured, but the configured executable is `netsh.cmd` while the committed script file is `netsh-isolate.cmd`. No deployment/rename step is documented and no live run is evidenced. |
+| Rule `100006` (C2 service creation) containment | Automated quarantine via SOAR | Design only; **no direct active-response binding** | `ossec.conf` has no `<active-response>` stanza for `100006`. Containment would depend entirely on the Shuffle REST API callback, which is not runtime-validated. |
+| Custom webhook integration (`configs/integrations/custom-shuffle`) | Alert forwarding to Shuffle | Implemented configuration + offline/static validation | Unit tests verify the original alert JSON is forwarded by the Python code. No live webhook delivery is evidenced. |
+| Shuffle workflow (`configs/shuffle/soc_automated_response_workflow.json`) | Automated SOAR response | Reference design; **not runtime-validated** | JSON graph is structurally valid per CI, but it is not a native Shuffle export and was not imported or executed against a live manager in any evidenced run. |
+| VirusTotal enrichment node | Automated threat-intel lookup | Design only | Node exists on the workflow canvas (gallery item 19). No live lookup result is shown. Requires a locally configured API key. |
+| Wazuh REST API JWT callback | Authenticated containment trigger | Design only | Node exists on the canvas (gallery item 21) and a request-shape example is in `docs/SOAR_PLAYBOOKS.md`. No live token exchange or API call is evidenced. |
+| Historical screenshot 22 (rule 651) | Host isolation proof | Simulated behavior (historical observation) | Shows built-in rule 651 ("Host Blocked by firewall-drop Active Response") with built-in SSH rules 5763/5760. Evidence of a stock `firewall-drop` event in the historical lab only — not of Windows/`netsh`, not of custom rule `100003`, and not of the committed scripts. Agent/time redacted. |
+| Historical detection screenshots 15–17 | Custom-rule detections | Simulated behavior (historical observation) | Show built-in rules 5763, 91837, 92650 — not the repository rules `100003`/`100004`/`100006`. |
+| Terminal animation (`assets/animations/terminal-simulation.svg`) | SOC feed | Simulated behavior (scripted illustration) | Timestamps, exec ID, and the "1.27s" outcome are written into the animation. No latency was measured. |
+| Response latency (e.g. "within milliseconds", "1.27s") | Measured performance | **No evidence** | No timing measurement exists in the repository. Do not quote a latency figure. |
+
+To reproduce or upgrade any row to live-agent execution: deploy the exact committed configs to an isolated lab, run the scenario, and keep the resulting `active-responses.log`, Shuffle execution record, and Wazuh alert — then update this table with links to that evidence.
 
 ---
 
@@ -496,10 +527,10 @@ import the workflow into Shuffle, or verify a live alert or containment.
 
 ## 👨‍💻 Author & Credits
 
-**Mohamed Sabry** · SOC Analyst & DFIR Specialist
+**Mohamed Sabry Hamdan** · Cybersecurity Analyst | SOC | Incident Response | DFIR | Detection
 - 🐙 GitHub: [@0xsabry](https://github.com/0xsabry)
 - 💼 LinkedIn: [Mohamed Sabry](https://www.linkedin.com/in/mohamed-sabry-hamdan/)
-- 📧 Email: `2201381@student.eelu.edu.eg`
+- 📧 Email: `mohamedsabry01144@gmail.com`
 
 ### Team Contributors
 - **Omar Khaled** — Shuffle SOAR Automation & Workflow Architecture
