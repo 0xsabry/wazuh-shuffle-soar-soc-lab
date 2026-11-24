@@ -187,17 +187,17 @@ The rules below are intended examples, not runtime-verified detections. Offline 
 ### Scenario 1: SSH Brute-Force Credential Attack (Ubuntu)
 The scenario descriptions below are reference examples from the lab. The current branch has not reproduced each detection or containment outcome end to end.
 - **Vector**: Remote SSH password spraying using `hydra` and `rockyou.txt`.
-- **Detection**: Log decoders matched repeated authentication failures within a 120-second sliding window, triggering Rule `100003` (*Maximum authentication attempts exceeded*).
+- **Detection (intended)**: Log decoders are designed to match repeated authentication failures within a 120-second sliding window, triggering Rule `100003` (*Maximum authentication attempts exceeded*). The historical screenshots show built-in rules `5760`/`5763` instead; firing of `100003` is not evidenced.
 - **Mitigation (intended, unverified on a live agent)**: `ossec.conf` binds rule `100003` to the `firewall-drop` active-response command, which is designed to write an `iptables` drop rule for the attacker's IP. No live-agent execution of this binding is evidenced in this repository.
 
 ### Scenario 2: Suspicious PowerShell Download Cradle (Windows 11)
 - **Vector**: Execution policy bypass paired with an in-memory `IEX (New-Object Net.WebClient).DownloadString(...)` payload cradle.
-- **Detection**: Captured via Script Block Logging (Event 4104), triggering Rule `100004` (*Suspicious PowerShell string execution*).
+- **Detection (intended)**: Script Block Logging (Event 4104) is designed to capture the command, triggering Rule `100004` (*Suspicious PowerShell string execution*). The historical screenshot shows built-in rule `91837` instead; firing of `100004` is not evidenced.
 - **Mitigation (intended, unverified on a live agent)**: `ossec.conf` binds rules `100004`/`100005` to the `netsh-isolate` active-response command, designed to place the host network stack into isolated quarantine. No live-agent execution of this binding is evidenced in this repository, and the configured executable name (`netsh.cmd`) does not match the committed script file (`netsh-isolate.cmd`) — see [Validation Status](#-validation-status).
 
 ### Scenario 3: C2 / Remote Service Creation (Windows Server 2022)
 - **Vector**: PsExec-style lateral execution installing a persistence service (`sc.exe create ...`).
-- **Detection**: Windows System Event 7045 detected, triggering Rule `100006` (*New Windows Service Created - Severity Level 12*).
+- **Detection (intended)**: Windows System Event 7045 is designed to trigger Rule `100006` (*New Windows Service Created - Severity Level 12*). The historical screenshot shows built-in rule `92650` instead; firing of `100006` is not evidenced.
 - **Mitigation (intended, unverified on a live agent)**: the Shuffle playbook design routes rule `100006` alerts through VirusTotal enrichment and a Wazuh REST API callback to trigger active response. No live end-to-end execution — no host quarantine and no analyst notification from a live run — is evidenced in this repository. Rule `100006` also has no direct active-response binding in `configs/ossec.conf`; containment for this scenario depends entirely on the unvalidated API callback path.
 
 ---
