@@ -28,7 +28,7 @@
     <group>authentication_failures,bruteforce,</group>
   </rule>
 
-  <!-- Trigger Active Response Rule 100007 (firewall-drop) on repeated failures -->
+  <!-- Rule 100003 is bound to the firewall-drop active-response command in ossec.conf; rule 100007 below only matches active-response log events. -->
   <rule id="100003" level="10" frequency="8" timeframe="120">
     <if_matched_sid>5710</if_matched_sid>
     <same_source_ip />
@@ -85,14 +85,14 @@
   <rule id="100007" level="3">
     <if_group>active_response</if_group>
     <match>firewall-drop</match>
-    <description>Active Response: firewall-drop triggered - Attacker IP blocked via iptables.</description>
+    <description>Active Response: firewall-drop event logged for a source IP. The log event alone does not prove the iptables rule was applied.</description>
     <group>active_response,</group>
   </rule>
 
   <rule id="100008" level="3">
     <if_group>active_response</if_group>
     <match>netsh</match>
-    <description>Active Response: netsh isolation executed - Host/Service network access blocked.</description>
+    <description>Active Response: netsh event logged. The log event alone does not prove host isolation was applied.</description>
     <group>active_response,</group>
   </rule>
 
