@@ -115,3 +115,14 @@ Verify webhook transmission by monitoring `/var/ossec/logs/ossec.log`:
 ```bash
 tail -f /var/ossec/logs/ossec.log | grep -i custom-shuffle
 ```
+
+---
+
+## 7. Active-Response Scripts: Deployment Gap (Read Before Testing Containment)
+
+The committed scripts in `configs/scripts/` are reference copies. Nothing in this repository shows them deployed to an agent or executed on one, and the offline checks do not validate that step.
+
+- **Linux (`firewall-drop.sh`)**: copy the script to the Linux agent's active-response directory (for example `/var/ossec/active-response/bin/firewall-drop.sh`), set ownership/permissions for the agent user, and restart the agent. The stock Wazuh agent already ships a `firewall-drop` script; decide explicitly whether you are replacing it with this copy or using the stock one.
+- **Windows (`netsh-isolate.cmd`)**: the manager config (`configs/ossec.conf`) registers a command named `netsh-isolate` with executable `netsh.cmd`, but the committed file is named `netsh-isolate.cmd`. Resolve this mismatch before testing — either rename/copy the file to the configured executable name on the agent's `active-response\bin` directory, or change the command definition to match the file. Do not assume the committed file is what would run.
+- **Rule `100006` has no direct active-response binding** in `configs/ossec.conf`. Containment for the C2 scenario depends entirely on the Shuffle REST API callback path, which is not runtime-validated.
+- Test containment only on an isolated, disposable endpoint with a recovery path. Confirm the block in `active-responses.log` on the agent and the corresponding alert on the manager; a configured binding alone is not proof it ran.

@@ -7,7 +7,7 @@ Security is at the heart of everything we build. If you discover a potential vul
 ### Reporting a Vulnerability
 
 - **Do NOT open a public GitHub issue** for undisclosed security vulnerabilities.
-- Please email the project maintainer directly at `2201381@student.eelu.edu.eg` or reach out via LinkedIn to **Mohamed Sabry**.
+- Please email the project maintainer directly at `mohamedsabry01144@gmail.com` or reach out via LinkedIn to **Mohamed Sabry Hamdan**.
 - Include detailed steps to reproduce the issue along with affected components.
 
 We will review reports promptly and publish patches to keep the community secure.

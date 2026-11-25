@@ -6,7 +6,7 @@ A comprehensive technical overview of the distributed, multi-cloud, multi-OS sec
 
 ## 1. Executive Summary
 
-This security operations lab implements an enterprise-grade, open-source **SIEM + SOAR + Zero-Trust Mesh** detection and response pipeline across 5 physically separated network environments. By utilizing **Tailscale** as an encrypted WireGuard mesh VPN, endpoints across different geographical locations communicate over a flat `100.x` private subnet without requiring port-forwarding or exposing services to the public internet.
+This security operations lab documents a lab-scale, open-source **SIEM + SOAR + Zero-Trust Mesh** detection and response design across 5 physically separated network environments. By utilizing **Tailscale** as an encrypted WireGuard mesh VPN, endpoints across different geographical locations communicate over a flat `100.x` private subnet without requiring port-forwarding or exposing services to the public internet.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -42,8 +42,8 @@ This security operations lab implements an enterprise-grade, open-source **SIEM 
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Node 01** | `wazuh-manager` / Linux | **SIEM Manager** | **Mohamed Sabry** ([@0xsabry](https://github.com/0xsabry)) | `100.64.0.10` | Log correlation, rule decoders, API daemon, active-response orchestrator |
 | **Node 02** | `shuffle-soar` / Linux (Docker) | **SOAR Engine** | **Omar Khaled** | `100.64.0.14` | Webhook ingestion, decision trees, VT enrichment, authenticated callbacks |
-| **Node 03** | `ubuntu-victim` / Ubuntu 24.04 | **SSH Target** | **Mohamed Massoud** | `100.64.0.11` | Wazuh Linux agent, auditd, sshd brute-force detection & iptables containment |
-| **Node 04** | `win11-victim` / Windows 11 | **PowerShell Target** | **Karim** | `100.64.0.12` | Wazuh Windows agent, Sysmon, PowerShell script block logs, netsh isolation |
+| **Node 03** | `ubuntu-victim` / Ubuntu 24.04 | **SSH Target** | **Mohamed Massoud** | `100.64.0.11` | Wazuh Linux agent, auditd, sshd brute-force detection & intended iptables containment (unverified on a live agent) |
+| **Node 04** | `win11-victim` / Windows 11 | **PowerShell Target** | **Karim** | `100.64.0.12` | Wazuh Windows agent, Sysmon, PowerShell script block logs, intended netsh isolation (unverified on a live agent) |
 | **Node 05** | `win2022-srv` / Server 2022 | **C2 Target** | **Mohamed Bushnak** | `100.64.0.13` | Wazuh Windows agent, Service Manager events, PsExec remote execution target |
 
 ---
@@ -58,15 +58,15 @@ This security operations lab implements an enterprise-grade, open-source **SIEM 
 
 ## 4. SIEM & SOAR Integration Architecture
 
-The interaction between Wazuh SIEM and Shuffle SOAR operates in a closed loop:
+The interaction between Wazuh SIEM and Shuffle SOAR is designed as a closed loop. The steps below describe the intended design, not a validated end-to-end run — see the [Validation Status](../README.md#-validation-status) table in the README. No live-agent containment execution and no measured response latency are evidenced in this repository.
 
 1. **Ingestion & Correlation**: Agents ship encrypted OSSEC events to the Wazuh Manager on port `1514/TCP`.
 2. **Rule Escalation**: When event thresholds exceed defined severity levels (e.g. repeated SSH auth failures or suspicious PowerShell execution), Wazuh triggers an alert.
 3. **Webhook Dispatch**: The `ossec-integratord` daemon constructs a JSON payload containing full alert context (Rule ID, Source IP, Agent ID, Full Command Line) and posts it over HTTP/HTTPS to Shuffle's webhook URL (`http://100.64.0.14:3001/api/v1/hooks/...`).
-4. **SOAR Orchestration**:
+4. **SOAR Orchestration (intended)**:
    - Parses JSON fields.
    - Evaluates branch conditions (Rule 100003 vs Rule 100004 vs Rule 100006).
    - Queries VirusTotal API v3 for IOC reputation.
    - Obtains a short-lived JWT token from Wazuh REST API (`/security/user/authenticate`).
-   - Executes Active Response via `/active-response` endpoint.
-5. **Host Containment**: The Wazuh agent receives the containment instruction and executes native firewall rules (`iptables` on Linux, `netsh` on Windows) within milliseconds.
+   - Requests Active Response via the `/active-response` endpoint.
+5. **Host Containment (intended)**: The Wazuh agent is designed to receive the containment instruction and execute native firewall rules (`iptables` on Linux, `netsh` on Windows). No execution latency was measured; do not quote one.

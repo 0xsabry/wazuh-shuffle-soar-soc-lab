@@ -1,6 +1,6 @@
 {
   "name": "Wazuh-SOAR-Automated-Threat-Response",
-  "description": "Orchestrates threat detection intake from Wazuh SIEM, enriches via VirusTotal, and initiates automated active-response containment.",
+  "description": "Reference design (not a native Shuffle export; not runtime-validated): intended threat-detection intake from Wazuh SIEM, enrichment via VirusTotal, and active-response containment requests.",
   "sharing": "private",
   "version": "1.2.0",
   "author": "Omar Khaled & Mohamed Sabry",
@@ -90,7 +90,7 @@
       "parameters": [
         {
           "name": "url",
-          "value": "https://<WAZUH_MANAGER>:55000/active-response?agents_list=$action_parse_alert.agent.id"
+          "value": "https://100.64.0.10:55000/active-response?agents_list=$action_parse_alert.agent.id"
         },
         {
           "name": "headers",

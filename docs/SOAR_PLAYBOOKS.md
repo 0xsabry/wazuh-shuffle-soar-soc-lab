@@ -6,7 +6,7 @@ Technical breakdown of Shuffle SOAR workflow pipelines, API authentication flows
 
 ## 1. Playbook Workflow Architecture
 
-The intended design uses Shuffle to receive Wazuh alerts by webhook and orchestrate enrichment and response decisions. Configure and verify the native workflow in the installed Shuffle version; the committed JSON is a reference graph only.
+The intended design uses Shuffle to receive Wazuh alerts by webhook and orchestrate enrichment and response decisions. Configure and verify the native workflow in the installed Shuffle version; the committed JSON is a reference graph only. For the evidenced status of each step, see the [Validation Status](../README.md#-validation-status) table in the README — no step below is a record of a live executed run.
 
 ```mermaid
 flowchart TD
